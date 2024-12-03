@@ -2,8 +2,9 @@ version: '3.8'
 
 services:
   form_generator:
+    container_name: form_generator
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8080:8000"
@@ -17,8 +18,9 @@ services:
       - broker
 
   form_worker:
+    container_name: form_worker
     build:
-      context: ./form-worker
+      context: ./backend/form-worker
       dockerfile: Dockerfile
     restart: always
     environment:
@@ -32,7 +34,7 @@ services:
     container_name: psql
     image: postgres:16
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=bHkH242GdlkgVXMtGWKrGV96iL8F5-Dw
       - POSTGRES_USER=postgres
@@ -44,6 +46,7 @@ services:
       - db_data:/var/lib/postgresql/data  
 
   mongodb:
+    container_name: mongodb
     image: mongo:8.0.3
     ports:
       - "27018:27017"
@@ -55,9 +58,8 @@ services:
       - app-network
 
   broker:
-    image: confluentinc/cp-kafka:7.7.1
-    hostname: broker
     container_name: broker
+    image: confluentinc/cp-kafka:7.7.1
     ports:
       - "9092:9092"
       - "9101:9101"
