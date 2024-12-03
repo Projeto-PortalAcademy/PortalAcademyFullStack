@@ -4,11 +4,11 @@ FROM node:18-alpine AS build
 WORKDIR /app
 
 # Copiar apenas os arquivos de dependência para melhorar o cache
-COPY ./package.json ./package-lock.json ./
+COPY ./academy-app/package.json ./academy-app/package-lock.json ./
 RUN npm install
 
 # Copiar todo o código para o diretório de trabalho
-COPY . .
+COPY ./academy-app ./
 
 # Construir o projeto para produção
 RUN npm run build
