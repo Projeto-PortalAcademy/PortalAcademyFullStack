@@ -33,6 +33,8 @@ def create_app() -> FastAPI:
     from form_generator.application.group import controller as group_controller
     from form_generator.application.attendance import controller as attendance_controller
 
+    from form_generator.middlewares import auth_middleware
+
     form_controller.configure(app)
     user_controller.configure(app)
     group_controller.configure(app)
@@ -44,7 +46,8 @@ def create_app() -> FastAPI:
             form_controller,
             user_controller,
             group_controller,
-            attendance_controller
+            attendance_controller,
+            auth_middleware
         ]
     )
     

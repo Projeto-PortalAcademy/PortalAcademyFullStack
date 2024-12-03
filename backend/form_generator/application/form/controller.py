@@ -17,7 +17,7 @@ from form_generator.application.form.use_cases.update_form_use_case import Updat
 from form_generator.application.form.use_cases.update_template_use_case import UpdateTemplateUseCase
 from form_generator.containers import Container
 from form_generator.infrastructure.logger import Logger
-from form_generator.middlewares.request_context_middleware import require_role
+from form_generator.middlewares.auth_middleware import require_role
 
 router = APIRouter()
 
@@ -98,7 +98,7 @@ async def list_templates(
     offset: Optional[int] = Query(0),
     get_all_templates_use_case: GetAllTemplatesUseCase = Depends(Provide[Container.get_all_templates_use_case]),
     logger: Logger = Depends(Provide[Container.logger]),
-    # user: dict = Depends(require_role("admin"))
+    user: dict = Depends(require_role("admin"))
 ):
     query_params = request.query_params.items()
     query = dict(query_params) 

@@ -104,6 +104,10 @@ class Container(containers.DeclarativeContainer):
 
     delete_user_use_case = providers.Factory(DeleteUserUseCase, user_service, logger)
 
+    # Auth
+
+    authenticator = providers.Singleton(AuthAdapter, Config.GOOGLE_CLIENT_ID)
+
     # Form
 
     form_service = providers.Factory(FormService, nosql_form_repository, nosql_template_repository, sql_form_repository, sql_template_repository, sql_user_repository, broker, logger)
