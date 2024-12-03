@@ -20,6 +20,32 @@ const api = axios.create({
   },
 });
 
+// Criar um Atendimento
+export function createAttendance(data: any) {
+  return api.post(endpoints.ATTENDANCE, data);
+}
+
+// Excluir um Atendimento
+export function deleteAttendance(attendanceId: string | number) {
+  return api.delete(`${endpoints.ATTENDANCE}/${attendanceId}`);
+}
+
+// Obter um Atendimento por ID
+export function getAttendance(attendanceId: string | number) {
+  return api.get(`${endpoints.ATTENDANCE}/${attendanceId}`);
+}
+
+// Listar todos os Atendimentos com Paginação
+export function listAttendances(queryParams?: any) {
+  return api.get(endpoints.ATTENDANCE, { params: queryParams });
+}
+
+// Atualizar um Atendimento
+export function updateAttendance(attendanceId: string | number, data: any) {
+  return api.put(`${endpoints.ATTENDANCE}/${attendanceId}`, data);
+}
+
+// Fazer login
 export function login(data: { token: string }) {
   return api.post(endpoints.AUTH, data);
 }
