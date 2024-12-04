@@ -23,4 +23,4 @@ ENV PYTHONPATH=/app
 EXPOSE 8000
 
 # Comando de inicialização da aplicação
-CMD ["python", "form_generator/app.py"]
+CMD ["sh", "-c", "cd form_generator && alembic upgrade head && python app.py"]
