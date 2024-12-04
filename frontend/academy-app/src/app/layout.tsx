@@ -5,12 +5,16 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "../components/Sidebar/sidebar";
 import Header from "../components/Header/header";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
+// Substitua pelo seu Client ID do Google
+const clientId = "26016779977-ncd6go4kfkbfeermarclvbvndp2glaqo.apps.googleusercontent.com";
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const pathname = usePathname();
 
   // Verifica se a rota é "/" e ignora o layout padrão
@@ -19,7 +23,11 @@ export default function RootLayout({
   if (isLoginPage) {
     return (
       <html lang="pt-br">
-        <body>{children}</body>
+        <body>
+          <GoogleOAuthProvider clientId={clientId}>
+            {children}
+          </GoogleOAuthProvider>
+        </body>
       </html>
     );
   }
@@ -27,11 +35,13 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body className="flex h-screen">
-        <Sidebar />
-        <div className="flex flex-col flex-grow">
-          <Header />
-          <div className="flex-grow overflow-auto p-4">{children}</div>
-        </div>
+        <GoogleOAuthProvider clientId={clientId}>
+          <Sidebar />
+          <div className="flex flex-col flex-grow">
+            <Header />
+            <div className="flex-grow overflow-auto p-4">{children}</div>
+          </div>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
