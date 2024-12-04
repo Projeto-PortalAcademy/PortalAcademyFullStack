@@ -75,7 +75,7 @@ class SQLRepository(IRepository[AsyncSession]):
             result = await session.execute(select(self.model))
             return result.scalars().all()
 
-    async def filter_by(self, params):
+    async def filter_by(self, params: dict):
         async with self.session_factory() as session:
             result = await session.execute(select(self.model).filter_by(**params))
             
