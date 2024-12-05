@@ -4,11 +4,7 @@ import { Modal, Box, Typography, Button, TextField } from "@mui/material";
 interface AddObservationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddObservation: (observation: {
-    title: string;
-    description: string;
-    date: string;
-  }) => void;
+  onAddObservation: (observation: { description: string }) => void;
 }
 
 const AddObservationModal: React.FC<AddObservationModalProps> = ({
@@ -16,14 +12,12 @@ const AddObservationModal: React.FC<AddObservationModalProps> = ({
   onClose,
   onAddObservation,
 }) => {
-  const [date, setDate] = useState("");
-  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   const handleAdd = () => {
-    onAddObservation({ title, description, date });
-    setDate("");
-    setTitle("");
+    onAddObservation({
+      description,
+    });
     setDescription("");
   };
 
@@ -52,21 +46,6 @@ const AddObservationModal: React.FC<AddObservationModalProps> = ({
         <Typography id="add-observation-title" variant="h6" mb={2}>
           Adicionar Observação
         </Typography>
-
-        <TextField
-          label="Data"
-          fullWidth
-          margin="normal"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-        <TextField
-          label="Título"
-          fullWidth
-          margin="normal"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
         <TextField
           label="Descrição"
           fullWidth
