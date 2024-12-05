@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import IconButton from "../IconButton/button";
 import PresenceStatus from "./PresenceStatus";
-import { FaHistory, FaCommentAlt } from "react-icons/fa";
+import { FaCommentAlt } from "react-icons/fa";
 
 type Student = {
   id: number;
@@ -12,7 +12,7 @@ type Student = {
 type AttendanceTableProps = {
   students: Student[];
   onToggleStatus: (id: number) => void;
-  onAddComment: (id: number) => void;
+  onAddComment: (id: number, comment: string) => void;
 };
 
 const AttendanceTable: React.FC<AttendanceTableProps> = ({
@@ -23,6 +23,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
+  const [comments, setComments] = useState<{ [key: number]: string }>({}); // Novo estado para armazenar os comentários
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(e.target.value);
@@ -34,13 +35,13 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
         user_id: student.id.toString(),
         date: selectedDate,
         is_present: student.status === "P",
-        comment: "",
+        comment: comments[student.id] || "", // Incluindo o comentário no payload
       };
-  
+
       // Log do JSON antes de enviar
       console.log("Enviando payload para o aluno:", payload);
-  
-      return fetch("http://localhost:8080/attendances/", {
+      // http://localhost:8080/attendances/
+      return fetch("", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,11 +49,11 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
         body: JSON.stringify(payload),
       });
     });
-  
+
     try {
       const responses = await Promise.all(requests);
       const failed = responses.filter((res) => !res.ok);
-  
+
       if (failed.length === 0) {
         alert("Presença enviada para todos os alunos com sucesso!");
       } else {
@@ -61,6 +62,17 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     } catch (error) {
       console.error("Error sending attendance:", error);
       alert("Erro ao enviar presença para todos os alunos.");
+    }
+  };
+
+  const handleAddComment = (id: number) => {
+    const comment = prompt("Digite um comentário:");
+    if (comment !== null) {
+      setComments((prevComments) => ({
+        ...prevComments,
+        [id]: comment,
+      }));
+      onAddComment(id, comment); // Chama a função que foi passada por props
     }
   };
 
@@ -113,7 +125,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   texto=""
                   Icone={FaCommentAlt}
                   disableHover={true}
-                  onClick={() => onAddComment(student.id)}
+                  onClick={() => handleAddComment(student.id)} // Passa o id para a função de adicionar comentário
                 />
               </td>
             </tr>

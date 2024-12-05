@@ -14,9 +14,7 @@ const Frequencia = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [isAddObservationModalOpen, setIsAddObservationModalOpen] =
     useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
-    null
-  );
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
 
   // Função para buscar dados dos estudantes
   const fetchStudents = async () => {
@@ -49,9 +47,9 @@ const Frequencia = () => {
     );
   };
 
-  const handleAddComment = (id: number) => {
-    setSelectedStudentId(id); // Armazena o ID do aluno selecionado
-    setIsAddObservationModalOpen(true); // Abre o modal
+  const handleAddComment = (id: number, comment: string) => {
+    console.log(`Comentário para o aluno ${id}: ${comment}`);
+    // Você pode adicionar lógica para salvar os comentários no banco ou manipular conforme necessário
   };
 
   const handleCloseAddObservationModal = () => {
@@ -59,41 +57,23 @@ const Frequencia = () => {
     setSelectedStudentId(null); // Reseta o ID do aluno selecionado
   };
 
-  // Função para adicionar a observação ao aluno
-  const handleAddObservation = (observation: { description: string }) => {
-    if (selectedStudentId === null) return;
-
-    setStudents((prevStudents) =>
-      prevStudents.map((student) =>
-        student.id === selectedStudentId
-          ? {
-              ...student,
-              observation: observation.description, // Adiciona a observação
-            }
-          : student
-      )
-    );
-
-    handleCloseAddObservationModal(); // Fecha o modal após adicionar a observação
-  };
-
   return (
     <div>
-      <h1 className="text-2xl font-bold">Frequência</h1>
-      <AttendanceTable
-        students={students}
-        onToggleStatus={toggleStatus}
-        onAddComment={handleAddComment}
-      />
-      <AddObservationModal
-        isOpen={isAddObservationModalOpen}
-        onClose={handleCloseAddObservationModal}
-        onAddObservation={(observation) => {
-          console.log(observation);
-          // Lógica para lidar com a adição da observação
-        }}
-      />
-    </div>
+    <h1 className="text-2xl font-bold">Frequência</h1>
+    <AttendanceTable
+      students={students}
+      onToggleStatus={toggleStatus}
+      onAddComment={handleAddComment} // Passa a função para adicionar comentários
+    />
+    <AddObservationModal
+      isOpen={isAddObservationModalOpen}
+      onClose={handleCloseAddObservationModal}
+      onAddObservation={(observation) => {
+        console.log(observation);
+        // Lógica para lidar com a adição da observação
+      }}
+    />
+  </div>
   );
 };
 
