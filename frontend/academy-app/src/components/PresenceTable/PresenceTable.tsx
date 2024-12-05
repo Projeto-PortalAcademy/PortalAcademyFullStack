@@ -6,7 +6,7 @@ import { FaHistory, FaCommentAlt } from "react-icons/fa";
 type Student = {
   id: number;
   name: string;
-  status: "P" | "F" | "A";
+  status: "P" | "F";
 };
 
 type AttendanceTableProps = {
@@ -18,15 +18,50 @@ type AttendanceTableProps = {
 const AttendanceTable: React.FC<AttendanceTableProps> = ({
   students,
   onToggleStatus,
-  onAddComment, // Recebe a função onAddComment
+  onAddComment,
 }) => {
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().slice(0, 10),
-    new Date().toISOString().slice(0, 10),
+    new Date().toISOString().slice(0, 10)
   );
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(e.target.value);
+  };
+
+  const handleSendAllAttendance = async () => {
+    const requests = students.map((student) => {
+      const payload = {
+        user_id: student.id.toString(),
+        date: selectedDate,
+        is_present: student.status === "P",
+        comment: "",
+      };
+  
+      // Log do JSON antes de enviar
+      console.log("Enviando payload para o aluno:", payload);
+  
+      return fetch("http://localhost:8080/attendances/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    });
+  
+    try {
+      const responses = await Promise.all(requests);
+      const failed = responses.filter((res) => !res.ok);
+  
+      if (failed.length === 0) {
+        alert("Presença enviada para todos os alunos com sucesso!");
+      } else {
+        alert(`${failed.length} envios falharam.`);
+      }
+    } catch (error) {
+      console.error("Error sending attendance:", error);
+      alert("Erro ao enviar presença para todos os alunos.");
+    }
   };
 
   return (
@@ -41,6 +76,12 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
             className="bg-white px-4 py-2 rounded-md shadow-md border border-gray-300"
           />
         </div>
+        <button
+          onClick={handleSendAllAttendance}
+          className="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600"
+        >
+          Enviar Presença de Todos
+        </button>
       </div>
 
       <table className="table-auto w-full">
