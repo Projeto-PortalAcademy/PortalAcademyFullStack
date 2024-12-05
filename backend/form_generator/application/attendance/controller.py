@@ -64,7 +64,7 @@ async def list_attendances(
     get_all_attendances_use_case: GetAllAttendancesUseCase = Depends(Provide[Container.get_all_attendances_use_case]),
     logger: Logger = Depends(Provide[Container.logger])
 ):
-    query_params = request.query_params.items()
+    query_params = dict(request.query_params.items())
 
     attendances = await get_all_attendances_use_case.run(
         query_params, limit=limit, offset=offset
