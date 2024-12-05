@@ -1,112 +1,102 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@mui/material";
 import AttendanceTable from "@/components/PresenceTable/PresenceTable";
 import AddObservationModal from "@/components/AddObservationModal/AddObservationModal";
+import { fetchStudents, submitAttendance, Student } from "@/services/attendanceService";
 
-interface Student {
-  id: number;
-  name: string;
-  status: "P" | "F";
-  user_id: string;
-  observation?: string; // Campo opcional para o comentário
-}
+// Frequencia Screen
+const Frequencia: React.FC = () => {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isAddObservationModalOpen, setIsAddObservationModalOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const Frequencia = () => {
-  const [students, setStudents] = useState<Student[]>([
-    { id: 1, name: "Camila Yukari Yatabe", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c1" },
-    { id: 2, name: "Vinicius de Morais Lino", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c2" },
-    { id: 3, name: "Vinicius Antunes", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c3" },
-    { id: 4, name: "Thiago Tavares Silva", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c4" },
-    { id: 5, name: "Guilherme Martins", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c5" },
-    { id: 6, name: "Matheus Pajé da Mata", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c6" },
-    { id: 7, name: "Thiago Tavares Silva", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c7" },
-    { id: 8, name: "Felipe Camargo", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c8" },
-    { id: 9, name: "Sérgio Nascimento", status: "P", user_id: "fd187c35-eddf-4c44-8a88-7dea7928d2c9" },
-  ]);
+  useEffect(() => {
+    const loadStudents = async () => {
+      try {
+        const data = await fetchStudents();
+        setStudents(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch students'));
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const [isAddObservationModalOpen, setIsAddObservationModalOpen] =
-    useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
-    null
-  );
-  const [comment, setComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false); // Estado para controle de envio
+    loadStudents();
+  }, []);
 
-  const currentDate = new Date().toISOString().split("T")[0]; // Data no formato YYYY-MM-DD
-
-  const toggleStatus = (id: number) => {
+  const toggleStatus = (id: string) => {
     setStudents((prevStudents) =>
       prevStudents.map((student) =>
         student.id === id
-          ? {
-              ...student,
-              status: student.status === "P" ? "F" : "P",
-            }
+          ? { ...student, status: student.status === "P" ? "F" : "P" }
           : student
       )
     );
   };
 
-  const handleAddComment = (id: number) => {
-    setSelectedStudentId(id); // Armazena o ID do aluno selecionado
-    setIsAddObservationModalOpen(true); // Abre o modal
+  const handleAddComment = (id: string) => {
+    setSelectedStudentId(id);
+    setIsAddObservationModalOpen(true);
   };
 
   const handleCloseAddObservationModal = () => {
-    setIsAddObservationModalOpen(false); // Fecha o modal
-    setSelectedStudentId(null); // Reseta o ID do aluno selecionado
-    setComment(""); // Reseta o comentário
+    setIsAddObservationModalOpen(false);
+    setSelectedStudentId(null);
   };
 
   const handleAddObservation = (observation: string) => {
-    if (selectedStudentId !== null) {
+    if (selectedStudentId) {
       setStudents((prevStudents) =>
         prevStudents.map((student) =>
-          student.id === selectedStudentId
-            ? { ...student, observation: observation }
-            : student
+          student.id === selectedStudentId ? { ...student, observation } : student
         )
       );
     }
-    handleCloseAddObservationModal(); // Fecha o modal após salvar
+    handleCloseAddObservationModal();
   };
 
   const handleSubmitAttendances = async () => {
-    setIsSubmitting(true); // Começa o envio
+    setIsSubmitting(true);
+    const currentDate = new Date().toISOString();
+    let successCount = 0;
+    let failureCount = 0;
 
-    const attendanceData = students.map((student) => ({
-      user_id: student.user_id,
-      date: currentDate,
-      is_present: student.status === "P" ? "true" : "false",
-      comment: student.observation || "", // Se não houver comentário, envia string vazia
-    }));
-
-    try {
-      const response = await fetch("http://localhost:8080/attendances", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(attendanceData),
-      });
-
-      if (response.ok) {
-        console.log("Presenças enviadas com sucesso!");
-        // Limpar observações ou outros estados se necessário
-      } else {
-        console.error("Erro ao enviar as presenças:", response.status);
+    for (const student of students) {
+      const sanitizedComment = typeof student.observation === 'string' ? student.observation : '';
+      
+      try {
+        await submitAttendance({
+          user_id: student.user_id,
+          date: currentDate,
+          is_present: student.status === "P",
+          comment: sanitizedComment
+        });
+        successCount++;
+      } catch (error) {
+        failureCount++;
+        console.error("Erro ao enviar presença:", error);
       }
-    } catch (error) {
-      console.error("Erro ao enviar as presenças:", error);
-    } finally {
-      setIsSubmitting(false); // Termina o envio
     }
+
+    setIsSubmitting(false);
   };
 
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  if (error) {
+    return <div>Erro ao carregar estudantes: {error.message}</div>;
+  }
+
   return (
-    <div>
+    <div className="frequencia-screen">
       <h1 className="text-2xl font-bold">Frequência</h1>
       <AttendanceTable
         students={students}
@@ -119,11 +109,12 @@ const Frequencia = () => {
         onAddObservation={handleAddObservation}
       />
       <div className="container mx-auto flex justify-end">
-        <Button className="m-auto mt-4 mb-4"  
+        <Button
+          className="m-auto mt-4 mb-4"
           variant="contained"
           color="primary"
           onClick={handleSubmitAttendances}
-          disabled={isSubmitting} // Desabilita o botão enquanto estiver enviando
+          disabled={isSubmitting}
         >
           {isSubmitting ? "Enviando..." : "Enviar Presenças"}
         </Button>
