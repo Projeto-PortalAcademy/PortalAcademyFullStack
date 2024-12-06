@@ -5,7 +5,7 @@ import Image from "next/image";
 import bgLogin from "../../public/images/bg-login.png";
 import { FaGithub } from "react-icons/fa";
 import { GoogleLogin } from "@react-oauth/google";
-//import { loginWithGoogle } from "../services/login";
+import Cookies from "js-cookie"; // Adicionado para gerenciar cookies
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,15 +22,18 @@ export default function LoginPage() {
   const handleGoogleLoginSuccess = (credentialResponse: any) => {
     try {
       const token = credentialResponse.credential;
-  
+
       // Decodifica o token para extrair informações do usuário
       const userInfo = parseJwt(token);
-  
+
       console.log("Usuário autenticado com Google:", userInfo);
-  
+
       // Armazena as informações do usuário no localStorage
       localStorage.setItem("user_info", JSON.stringify(userInfo));
-  
+
+      // Armazena as informações do usuário no cookie
+      Cookies.set("user_info", JSON.stringify(userInfo), { expires: 1 }); // Expira em 1 dia
+
       // Redireciona para o dashboard
       router.push("/frequencia");
     } catch (err) {
@@ -38,7 +41,7 @@ export default function LoginPage() {
       setError("Erro ao realizar login com Google.");
     }
   };
-  
+
   const parseJwt = (token: string) => {
     try {
       const base64Url = token.split(".")[1];

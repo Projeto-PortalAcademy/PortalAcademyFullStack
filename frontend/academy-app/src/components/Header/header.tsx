@@ -29,7 +29,7 @@ const Header: React.FC = () => {
           <img
             src={userInfo.picture}
             alt="Foto de perfil"
-            className="w-20 h-20 rounded-full"
+            className="w-8 h-8 rounded-full"
           />
         ) : (
           <FaUserCircle className="text-gray-800" size={30} />
