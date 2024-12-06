@@ -268,8 +268,8 @@ export default function Areas() {
               <Box>
                 <DialogTitle>{group.name}</DialogTitle>
               {userGroupResponse.filter((userGroup: any)=>{userGroup.grouId === group.Id })
-              .map((filteredUser: any)=>{
-                const user = userResponse.find((u: any) => u.id === filteredUser.userId);
+              .map((filteredUserGroup: any)=>{
+                const user = userResponse.find((u: any) => u.id === filteredUserGroup.userId);
                 return (
                   <Box key={user?.id} padding="8px" borderBottom="1px solid #ddd">
                     <>{user?.name}</>
