@@ -22,7 +22,12 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import userService from "@/services/userService";
+import { groupService } from "@/services/groupService";
+import { GroupResponse, UserGroupResponse } from "@/services/dto/GroupTypes"
+import { GetAllUserSchema } from "@/services/dto/UserTypesDTO"
+
 
 type User = string;
 
@@ -38,8 +43,23 @@ export default function Areas() {
 
   const [open, setOpen] = useState(false);
   const [newAreaName, setNewAreaName] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User>("");
+  const [users, setUsers] = useState<GetAllUserSchema>([]);
+  const [groups, setGroups] = useState<GroupResponse[]>([]);
+  const [usersGroups, setUsersGroups] = useState<UserGroupResponse[]>([]);
+
+  useEffect(() => {
+    const fetchData = async() => {
+      const responseGroups = await groupService.getAllGroups();
+      const responseUsersGroups = await groupService.getAllUserGroups();
+      const responseUsers = userService.getAllUsers();
+
+      setGroups(responseGroups);
+      setUsersGroups(responseUsersGroups);
+      setUsers(responseUsers);
+    }
+    fetchData()
+    }, []);
 
   const addArea = () => {
     const newArea = {
