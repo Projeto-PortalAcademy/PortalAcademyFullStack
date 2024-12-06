@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  DialogContentText,
   Fab,
   FormControl,
   IconButton,
@@ -22,24 +23,67 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { groupService } from "@/services/groupService";
+import userService from "@/services/userService";
 
-type User = string;
+type User = {
+  id: string;
+  name: string;
+  email: string;
+};
 
 export default function Areas() {
-  const [areas, setAreas] = useState([
-    { title: "Ciência de dados", userCount: 3, userIconColor: "#6A9ACD" },
-    { title: "Engenharia de dados", userCount: 2, userIconColor: "#7BBF85" },
-    { title: "Front-end", userCount: 4, userIconColor: "#6CBED4" },
-    { title: "Machine Learning", userCount: 2, userIconColor: "#C188D4" },
-    { title: "DevOps", userCount: 2, userIconColor: "#D4A66A" },
-    { title: "Back-end", userCount: 3, userIconColor: "#D47878" },
-  ]);
-
+  const [areas, setAreas] = useState<any[]>([]);
+  const [filteredArea, setFilteredArea] = useState("Todos");
   const [open, setOpen] = useState(false);
   const [newAreaName, setNewAreaName] = useState("");
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User>("");
+  const [selectedUser, setSelectedUser] = useState<string>("");
+  const [userGroups, setUserGroups] = useState<any[]>([]); 
+
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const response = await groupService.getAllGroups();
+        setAreas(response);  // Areas fetched
+      } catch (error) {
+        console.error("Erro ao buscar áreas:", error);
+      }
+    };
+    fetchAreas();
+
+    const fetchUsers = async () => {
+      try {
+        const response = await userService.getAllUsers();
+        setUsers(response.data);  // Users fetched
+      } catch (error) {
+        console.error("Erro ao buscar usuários:", error);
+      }
+    };
+    fetchUsers();
+
+    const fetchUserGroups = async () => {
+      try {
+        const response = await groupService.getAllUserGroups();
+        setUserGroups(response);  // Associations between users and groups
+      } catch (error) {
+        console.error("Erro ao buscar usuários nos grupos:", error);
+      }
+    };
+    fetchUserGroups();
+  }, []);
+
+  // Filter users by the groups they belong to
+  const getUsersInGroup = (groupId: string) => {
+    return userGroups
+      .filter((userGroup) => userGroup.group_id === groupId)
+      .map((userGroup) => {
+        const user = users.find((user) => user.id === userGroup.user_id);
+        return user ? user.name : null;
+      })
+      .filter((name) => name !== null);
+  };
 
   const addArea = () => {
     const newArea = {
@@ -64,6 +108,11 @@ export default function Areas() {
     setUsers(users.filter((u) => u !== user));
   };
 
+  const filteredAreas =
+    filteredArea === "Todos"
+      ? areas
+      : areas.filter((area) => area.title === filteredArea);
+
   return (
     <Box
       p={4}
@@ -80,23 +129,20 @@ export default function Areas() {
         <Toolbar>
           <FormControl variant="outlined" sx={{ mr: 2, minWidth: 120 }}>
             <InputLabel>Filtrar por:</InputLabel>
-            <Select label="Filtrar por">
+            <Select
+              value={filteredArea}
+              onChange={(e) => setFilteredArea(e.target.value)}
+              label="Filtrar por"
+            >
               <MenuItem value="Todos">Todos</MenuItem>
-              <MenuItem value="Ciência de dados">Ciência de dados</MenuItem>
-              <MenuItem value="Engenharia de dados">
-                Engenharia de dados
-              </MenuItem>
-              <MenuItem value="Front-end">Front-end</MenuItem>
-              <MenuItem value="Machine Learning">Machine Learning</MenuItem>
-              <MenuItem value="DevOps">DevOps</MenuItem>
-              <MenuItem value="Back-end">Back-end</MenuItem>
+              {areas.map((area, index) => (
+                <MenuItem key={index} value={area.name}>
+                  {area.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
-          <TextField
-            label="Pesquisar"
-            variant="outlined"
-            sx={{ flexGrow: 1 }}
-          />
+          <TextField label="Pesquisar" variant="outlined" sx={{ flexGrow: 1 }} />
         </Toolbar>
       </AppBar>
       <Box
@@ -105,14 +151,18 @@ export default function Areas() {
         gap={4}
         sx={{ maxWidth: "100%", overflowX: "hidden", boxSizing: "border-box" }}
       >
-        {areas.map((area, index) => (
-          <Area
-            key={index}
-            title={area.title}
-            userCount={area.userCount}
-            userIconColor={area.userIconColor}
-          />
-        ))}
+        {filteredAreas.map((area, index) => {
+          const usersInGroup = getUsersInGroup(area.id); // Get users in this area
+          return (
+            <Area
+              key={index}
+              title={area.title}
+              userCount={usersInGroup.length}
+              userIconColor={area.userIconColor}
+              users={usersInGroup}  // Passing the users to the Area component
+            />
+          );
+        })}
       </Box>
       <Tooltip title="Adicionar novo time" arrow>
         <Fab
@@ -170,9 +220,11 @@ export default function Areas() {
               value={selectedUser}
               onChange={(e) => setSelectedUser(e.target.value)}
             >
-              <MenuItem value="Matheus Elis">Matheus Elis</MenuItem>
-              <MenuItem value="Ronaldo Moreira">Ronaldo Moreira</MenuItem>
-              <MenuItem value="Gustavo Silva">Gustavo Silva</MenuItem>
+              {users.map((user, index) => (
+                <MenuItem key={index} value={user.id}>
+                  {user.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
           <Tooltip title="Adicionar usuário" arrow>
@@ -206,46 +258,29 @@ export default function Areas() {
                 key={index}
                 sx={{
                   display: "flex",
+                  flexDirection: "row",
                   alignItems: "center",
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: 1,
-                  padding: "4px 8px",
-                  maxWidth: "200px",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  gap: 1,
                 }}
               >
-                <Box
-                  sx={{
-                    flexGrow: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {user}
-                </Box>
-                <IconButton
-                  size="small"
+                <Typography variant="body1">{user.name}</Typography>
+                <Button
+                  variant="outlined"
+                  color="error"
                   onClick={() => handleRemoveUser(user)}
-                  sx={{ ml: 1, flexShrink: 0 }}
                 >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
+                  Remover
+                </Button>
               </Box>
             ))}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "center" }}>
-          <Button
-            onClick={addArea}
-            sx={{
-              backgroundColor: "#4963bf",
-              "&:hover": { backgroundColor: "#2b396b" },
-            }}
-            variant="contained"
-          >
-            ADICIONAR
+        <DialogActions>
+          <Button onClick={addArea} color="primary">
+            Salvar
+          </Button>
+          <Button onClick={() => setOpen(false)} color="secondary">
+            Cancelar
           </Button>
         </DialogActions>
       </Dialog>
