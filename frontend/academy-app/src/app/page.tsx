@@ -15,26 +15,43 @@ export default function LoginPage() {
   useEffect(() => {
     const userInfo = localStorage.getItem("user_info");
     if (userInfo) {
-      router.push("/dashboard"); // Redireciona para o dashboard se autenticado
+      router.push("/frequencia"); // Redireciona para o dashboard se autenticado
     }
   }, [router]);
 
-  const handleGoogleLoginSuccess = async (credentialResponse: any) => {
+  const handleGoogleLoginSuccess = (credentialResponse: any) => {
     try {
       const token = credentialResponse.credential;
-
-      // Enviar o token para o back-end
-      const res = await loginWithGoogle({ token });
-      console.log("Login bem-sucedido:", res.data);
-
-      // Armazena o token no localStorage e redireciona o usuário
-      localStorage.setItem("user_info", JSON.stringify(res.data.user_info));
+  
+      // Decodifica o token para extrair informações do usuário
+      const userInfo = parseJwt(token);
+  
+      console.log("Usuário autenticado com Google:", userInfo);
+  
+      // Armazena as informações do usuário no localStorage
+      localStorage.setItem("user_info", JSON.stringify(userInfo));
+  
+      // Redireciona para o dashboard
       router.push("/dashboard");
-    } catch (err: any) {
-      console.error("Erro ao realizar login com Google:", err.response || err);
+    } catch (err) {
+      console.error("Erro ao processar token do Google:", err);
       setError("Erro ao realizar login com Google.");
     }
   };
+  
+  // Função para decodificar o JWT
+  function parseJwt(token: string) {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+  
+    return JSON.parse(jsonPayload);
+  }
 
   const handleGoogleLoginFailure = (error: any) => {
     console.error("Erro ao tentar autenticar com Google:", error);
