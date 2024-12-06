@@ -25,6 +25,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import React, { useEffect, useState } from "react";
 import { groupService } from "@/services/groupService";
 import userService from "@/services/userService";
+import { UserGroupResponse } from "@/services/dto/GroupTypes";
+import { GetAllUsersSchema } from "@/services/dto/UserTypesDTO";
 
 type User = {
   id: string;
@@ -48,38 +50,39 @@ export default function Areas() {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [addedUsers, setAddedUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const[groupResponse, setGroupResponse] = useState<Group[]>([]);
+  const[userResponse, setUserResponse] = useState<GetAllUsersSchema>([]);
+  const[userGroupResponse, setUserGroupResponse] = useState<UserGroupResponse[]>([]);
 
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const [groupResponse, userResponse, userGroupResponse] = await Promise.all([
-          groupService.getAllGroups(),
-          userService.getAllUsers(),
-          groupService.getAllUserGroups(),
+        await Promise.all([
+          setGroupResponse(groupService.getAllGroups()),
+          setUserResponse(userService.getAllUsers()),
+          setUserGroupResponse(groupService.getAllUserGroups()),
         ]);
 
         if (!groupResponse || !userResponse || !userGroupResponse) {
           throw new Error("Invalid response from API");
         }
 
-        const groups = groupResponse.map((group: Group) => ({
-          ...group,
-          users: [],
-        }));
+        const groups = {user_id: String};
 
         setUsers(userResponse);
 
         userGroupResponse.forEach((userGroup: { group_id: string; user_id: string }) => {
           const group = groups.find((g) => g.id === userGroup.group_id);
-          const user = userResponse.find((u: User) => u.id === userGroup.user_id);
+          const user = userResponse.data.filter((u: any) => u.id.toString() === userGroup.user_id);
+
           if (group && user) {
             group.users.push(user);
           }
         });
 
         setAreas(groups);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching data:", error.message || error);
       }
     };
@@ -117,7 +120,7 @@ export default function Areas() {
   
       // Vincula os usuários ao último grupo criado
       await Promise.all(
-        addedUsers.map((user) =>
+        addedUsers.map((user: any) =>
           groupService.addUserToGroup({
             group_id: lastGroup.id, // Usa o ID do último grupo criado
             user_id: user.id,
@@ -136,8 +139,8 @@ export default function Areas() {
   
   const handleAddUser = () => {
     if (selectedUser) {
-      const userToAdd = users.find((user) => user.id === selectedUser);
-      if (userToAdd && !addedUsers.some((u) => u.id === userToAdd.id)) {
+      const userToAdd = users.find((user: any) => user.id === selectedUser);
+      if (userToAdd && !addedUsers.some((u: any) => u.id === userToAdd.id)) {
         setAddedUsers([...addedUsers, userToAdd]);
       }
       setSelectedUser("");
@@ -145,13 +148,13 @@ export default function Areas() {
   };
 
   const handleRemoveUser = (user: User) => {
-    setAddedUsers(addedUsers.filter((u) => u.id !== user.id)); // Remove o usuário da lista de adicionados
+    setAddedUsers(addedUsers.filter((u:any) => u.id !== user.id)); // Remove o usuário da lista de adicionados
   };
 
   const filteredAreas =
     filteredArea === "Todos"
       ? areas
-      : areas.filter((area) => area.name === filteredArea);
+      : areas.filter((area: any) => area.name === filteredArea);
 
   return (
     <Box
@@ -171,11 +174,11 @@ export default function Areas() {
             <InputLabel>Filtrar por:</InputLabel>
             <Select
               value={filteredArea}
-              onChange={(e) => setFilteredArea(e.target.value)}
+              onChange={(e: any) => setFilteredArea(e.target.value)}
               label="Filtrar por"
             >
               <MenuItem value="Todos">Todos</MenuItem>
-              {areas.map((area, index) => (
+              {areas.map((area: any, index:any) => (
                 <MenuItem key={index} value={area.name}>
                   {area.name}
                 </MenuItem>
@@ -195,11 +198,10 @@ export default function Areas() {
         gap={4}
         sx={{ maxWidth: "100%", overflowX: "hidden", boxSizing: "border-box" }}
       >
-        {filteredAreas.map((area, index) => (
+        {filteredAreas.map((area: any, index: number) => (
           <Area
-            key={index}
             title={area.name}
-            userCount={area.users.length}
+            //userCount={area.users.length}
             userIconColor="#B0B0B0"
             users={area.users}
           />
@@ -245,22 +247,40 @@ export default function Areas() {
             label="Nome da área"
             fullWidth
             value={newAreaName}
-            onChange={(e) => setNewAreaName(e.target.value)}
+            onChange={(e: any) => setNewAreaName(e.target.value)}
             sx={{ mb: 2 }}
           />
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Escolha usuários</InputLabel>
             <Select
               value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
+              onChange={(e: any) => setSelectedUser(e.target.value)}
             >
-              {users.map((user) => (
+              {users.map((user: any) => (
                 <MenuItem key={user.id} value={user.id}>
                   {user.name}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
+          <Box>
+            {groupResponse.map((group: any)=>{
+              <Box>
+                <DialogTitle>{group.name}</DialogTitle>
+              {userGroupResponse.filter((userGroup: any)=>{userGroup.grouId === group.Id })
+              .map((filteredUser: any)=>{
+                const user = userResponse.find((u: any) => u.id === filteredUser.userId);
+                return (
+                  <Box key={user?.id} padding="8px" borderBottom="1px solid #ddd">
+                    <>{user?.name}</>
+                    <>{user?.email}</>
+                  </Box>
+                );
+              })
+              }
+              </Box>
+            })}
+          </Box>
           <Box
             sx={{
               display: "flex",
@@ -295,7 +315,7 @@ export default function Areas() {
               overflow: "hidden",
             }}
           >
-            {addedUsers.map((user, index) => (
+            {addedUsers.map((user: any, index: number) => (
               <Box
                 key={index}
                 sx={{
