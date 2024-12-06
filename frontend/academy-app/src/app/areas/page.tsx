@@ -48,6 +48,7 @@ export default function Areas() {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [addedUsers, setAddedUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
 
   useEffect(() => {
@@ -188,13 +189,68 @@ export default function Areas() {
             </Select>
           </FormControl>
 
-         <TextField
-          label="Pesquisar"
-          variant="outlined"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{ flexGrow: 1 }}
-        />
+          <TextField
+            label="Pesquisar"
+            variant="outlined"
+            value={searchQuery}
+            onChange={(e) => {
+              const query = e.target.value;
+              setSearchQuery(query);
+
+              // Filtrar os usuários de acordo com o texto digitado
+              const matchingUsers = users.filter((user) =>
+                user.name.toLowerCase().includes(query.toLowerCase())
+              );
+
+              setFilteredUsers(matchingUsers); // Atualiza os usuários possíveis
+            }}
+            sx={{ flexGrow: 1 }}
+          />
+        {searchQuery && (
+          <Box
+            sx={{
+              position: "absolute",
+              backgroundColor: "white",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              marginTop: "4px",
+              width: "100%",
+              maxHeight: "200px",
+              overflowY: "auto",
+              zIndex: 10,
+            }}
+          >
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <Box
+                  key={user.id}
+                  sx={{
+                    padding: "8px",
+                    cursor: "pointer",
+                    "&:hover": { backgroundColor: "#f5f5f5" },
+                  }}
+                  onClick={() => {
+                    setSearchQuery(user.name); // Define o nome selecionado no campo
+                    setFilteredUsers([]); // Limpa as sugestões
+                  }}
+                >
+                  {user.name}
+                </Box>
+              ))
+            ) : (
+              <Typography
+                sx={{
+                  padding: "8px",
+                  color: "gray",
+                  textAlign: "center",
+                }}
+              >
+                Nenhum usuário encontrado
+              </Typography>
+            )}
+          </Box>
+        )}
+
 
         </Toolbar>
       </AppBar>
@@ -208,12 +264,13 @@ export default function Areas() {
           <Area
             key={index}
             title={area.name}
-            userCount={area.users.length}
+            userCount={filteredUsersBySearch(area.users).length}
             userIconColor="#B0B0B0"
-            users={area.users}
+            users={filteredUsersBySearch(area.users)}
           />
         ))}
       </Box>
+
       <Tooltip title="Adicionar novo time" arrow>
         <Fab
           color="primary"
