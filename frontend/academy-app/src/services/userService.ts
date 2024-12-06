@@ -26,8 +26,8 @@ const userService = {
     const response = await api.get(endpoints.USER, {
       params: { limit, offset },
     });
-    return response.data;
-  },
+    return response.data || [];
+    },
 
   updateUser: async (
     userId: number,
