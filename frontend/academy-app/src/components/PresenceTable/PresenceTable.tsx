@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Button } from "@mui/material";
 import IconButton from "../IconButton/button";
 import PresenceStatus from "./PresenceStatus";
 import { FaCommentAlt } from "react-icons/fa";
@@ -6,79 +7,36 @@ import { FaCommentAlt } from "react-icons/fa";
 type Student = {
   id: number;
   name: string;
-  status: "P" | "F";
+  status: "P" | "F" | "A";
 };
 
-type AttendanceTableProps = {
+type PresenceTableProps = {
   students: Student[];
   onToggleStatus: (id: number) => void;
-  onAddComment: (id: number, comment: string) => void;
+  onAddComment: (id: number) => void;
+  onSubmitAttendances: () => void; 
+  isSubmitting: boolean; 
 };
 
-const AttendanceTable: React.FC<AttendanceTableProps> = ({
+const PresenceTable: React.FC<PresenceTableProps> = ({
   students,
   onToggleStatus,
   onAddComment,
+  onSubmitAttendances,
+  isSubmitting,
 }) => {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
-  const [comments, setComments] = useState<{ [key: number]: string }>({}); // Novo estado para armazenar os comentários
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(e.target.value);
   };
 
-  const handleSendAllAttendance = async () => {
-    const requests = students.map((student) => {
-      const payload = {
-        user_id: student.id.toString(),
-        date: selectedDate,
-        is_present: student.status === "P",
-        comment: comments[student.id] || "", // Incluindo o comentário no payload
-      };
-
-      // Log do JSON antes de enviar
-      console.log("Enviando payload para o aluno:", payload);
-      // http://localhost:8080/attendances/
-      return fetch("", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-    });
-
-    try {
-      const responses = await Promise.all(requests);
-      const failed = responses.filter((res) => !res.ok);
-
-      if (failed.length === 0) {
-        alert("Presença enviada para todos os alunos com sucesso!");
-      } else {
-        alert(`${failed.length} envios falharam.`);
-      }
-    } catch (error) {
-      console.error("Error sending attendance:", error);
-      alert("Erro ao enviar presença para todos os alunos.");
-    }
-  };
-
-  const handleAddComment = (id: number) => {
-    const comment = prompt("Digite um comentário:");
-    if (comment !== null) {
-      setComments((prevComments) => ({
-        ...prevComments,
-        [id]: comment,
-      }));
-      onAddComment(id, comment); // Chama a função que foi passada por props
-    }
-  };
-
   return (
     <div className="container mx-auto p-4">
-      <div className="flex items-center mb-6 space-x-2">
+      {/* Linha para data e botão */}
+      <div className="flex items-center mb-6 space-x-4">
         <div>
           <span className="text-lg font-bold mr-4">Registrar dia:</span>
           <input
@@ -88,14 +46,18 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
             className="bg-white px-4 py-2 rounded-md shadow-md border border-gray-300"
           />
         </div>
-        <button
-          onClick={handleSendAllAttendance}
-          className="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600"
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={onSubmitAttendances}
+          disabled={isSubmitting}
+          className="ml-4"
         >
-          Enviar Presença de Todos
-        </button>
+          {isSubmitting ? "Enviando..." : "Registrar Presença"}
+        </Button>
       </div>
 
+      {/* Tabela */}
       <table className="table-auto w-full">
         <thead>
           <tr>
@@ -125,7 +87,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   texto=""
                   Icone={FaCommentAlt}
                   disableHover={true}
-                  onClick={() => handleAddComment(student.id)} // Passa o id para a função de adicionar comentário
+                  onClick={() => onAddComment(student.id)}
                 />
               </td>
             </tr>
@@ -136,4 +98,4 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
   );
 };
 
-export default AttendanceTable;
+export default PresenceTable;
