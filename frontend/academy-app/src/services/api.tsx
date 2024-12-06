@@ -1,10 +1,11 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://localhost:8080";
 
 export const endpoints = {
   LOGIN: "/auth/login",
   CREATE_USER: "/users",
+  USER: "/users",
   FORMS: "/forms",
 };
 
