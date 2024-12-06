@@ -5,7 +5,7 @@ import Image from "next/image";
 import bgLogin from "../../public/images/bg-login.png";
 import { FaGithub } from "react-icons/fa";
 import { GoogleLogin } from "@react-oauth/google";
-import { loginWithGoogle } from "../services/login";
+//import { loginWithGoogle } from "../services/login";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,26 +32,29 @@ export default function LoginPage() {
       localStorage.setItem("user_info", JSON.stringify(userInfo));
   
       // Redireciona para o dashboard
-      router.push("/dashboard");
+      router.push("/frequencia");
     } catch (err) {
       console.error("Erro ao processar token do Google:", err);
       setError("Erro ao realizar login com Google.");
     }
   };
   
-  // Função para decodificar o JWT
-  function parseJwt(token: string) {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-  
-    return JSON.parse(jsonPayload);
-  }
+  const parseJwt = (token: string) => {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error("Erro ao decodificar token JWT:", e);
+      return null;
+    }
+  };
 
   const handleGoogleLoginFailure = (error: any) => {
     console.error("Erro ao tentar autenticar com Google:", error);
