@@ -149,9 +149,14 @@ export default function Areas() {
   };
 
   const filteredAreas =
-    filteredArea === "Todos"
-      ? areas
-      : areas.filter((area) => area.name === filteredArea);
+  filteredArea === "Todos"
+    ? areas
+    : areas.filter((area) => area.name === filteredArea);
+
+  const filteredUsersBySearch = (users: User[]) =>
+    users.filter((user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   return (
     <Box
@@ -182,11 +187,15 @@ export default function Areas() {
               ))}
             </Select>
           </FormControl>
-          <TextField
-            label="Pesquisar"
-            variant="outlined"
-            sx={{ flexGrow: 1 }}
-          />
+
+         <TextField
+          label="Pesquisar"
+          variant="outlined"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ flexGrow: 1 }}
+        />
+
         </Toolbar>
       </AppBar>
       <Box
