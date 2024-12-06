@@ -8,7 +8,7 @@ import {
 
 const userService = {
   createUser: async (userData: CreateUserSchema): Promise<{ message: string }> => {
-    const response = await api.post(endpoints.CREATE_USER, userData);
+    const response = await api.post(endpoints.USER, userData);
     return response.data;
   },
 

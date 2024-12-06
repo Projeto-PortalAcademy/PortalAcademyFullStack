@@ -4,7 +4,6 @@ const BASE_URL = "http://localhost:8080";
 
 export const endpoints = {
   LOGIN: "/auth/login",
-  CREATE_USER: "/users",
   FORMS: "/forms",
   USER: "/users",
   GROUP: "/groups",
