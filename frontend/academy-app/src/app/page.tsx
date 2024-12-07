@@ -1,11 +1,13 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import bgLogin from "../../public/images/bg-login.png";
 import { FaGithub } from "react-icons/fa";
 import { GoogleLogin } from "@react-oauth/google";
-import Cookies from "js-cookie"; // Adicionado para gerenciar cookies
+import { parseJwt } from "../services/login"; // Importa parseJwt
+import Cookies from "js-cookie";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,47 +17,30 @@ export default function LoginPage() {
   useEffect(() => {
     const userInfo = localStorage.getItem("user_info");
     if (userInfo) {
-      router.push("/frequencia"); // Redireciona para o dashboard se autenticado
+      router.push("/frequencia"); // Redireciona se autenticado
     }
   }, [router]);
 
   const handleGoogleLoginSuccess = (credentialResponse: any) => {
     try {
       const token = credentialResponse.credential;
-
+  
       // Decodifica o token para extrair informações do usuário
       const userInfo = parseJwt(token);
-
+  
       console.log("Usuário autenticado com Google:", userInfo);
-
-      // Armazena as informações do usuário no localStorage
+  
+      // Armazena o token no localStorage
       localStorage.setItem("user_info", JSON.stringify(userInfo));
-
-      // Armazena as informações do usuário no cookie
+  
+      // Armazena o token como um cookie para ser usado pelo middleware
       Cookies.set("user_info", JSON.stringify(userInfo), { expires: 1 }); // Expira em 1 dia
-
+  
       // Redireciona para o dashboard
       router.push("/frequencia");
     } catch (err) {
-      console.error("Erro ao processar token do Google:", err);
+      console.error("Erro ao realizar login com Google:", err);
       setError("Erro ao realizar login com Google.");
-    }
-  };
-
-  const parseJwt = (token: string) => {
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
-          .join("")
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      console.error("Erro ao decodificar token JWT:", e);
-      return null;
     }
   };
 

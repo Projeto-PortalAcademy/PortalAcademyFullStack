@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import AttendanceTable from "@/components/PresenceTable/PresenceTable";
 import AddObservationModal from "@/components/AddObservationModal/AddObservationModal";
+import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 
 interface Student {
   id: number;
@@ -58,18 +59,20 @@ const Frequencia = () => {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Frequência</h1>
-      <AttendanceTable
-        students={students}
-        onToggleStatus={toggleStatus}
-        onAddComment={handleAddComment}
-      />
-      <AddObservationModal
-        isOpen={isAddObservationModalOpen}
-        onClose={handleCloseAddObservationModal}
-      />
-    </div>
+    <ProtectedRoute>
+      <div>
+        <h1 className="text-2xl font-bold">Frequência</h1>
+        <AttendanceTable
+          students={students}
+          onToggleStatus={toggleStatus}
+          onAddComment={handleAddComment}
+        />
+        <AddObservationModal
+          isOpen={isAddObservationModalOpen}
+          onClose={handleCloseAddObservationModal}
+        />
+      </div>
+    </ProtectedRoute>
   );
 };
 

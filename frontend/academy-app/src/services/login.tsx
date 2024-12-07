@@ -1,3 +1,5 @@
+import Cookies from "js-cookie";
+
 /**
  * Decodifica um token JWT para obter as informações do usuário.
  * @param token - Token JWT recebido do Google.
@@ -36,6 +38,10 @@ export function loginWithGoogle(token: string): void {
 
     // Armazena as informações do usuário no localStorage
     localStorage.setItem("user_info", JSON.stringify(userInfo));
+
+    // Armazena as informações do usuário no cookie
+    Cookies.set("user_info", JSON.stringify(userInfo), { expires: 1, path: "/" });
+
     console.log("Login realizado com sucesso:", userInfo);
   } catch (error) {
     console.error("Erro ao realizar login com Google:", error);
