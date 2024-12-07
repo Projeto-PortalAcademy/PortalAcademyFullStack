@@ -23,6 +23,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import React, { useEffect, useState } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 import { groupService } from "@/services/groupService";
 import userService from "@/services/userService";
 
@@ -170,6 +171,7 @@ export default function Areas() {
     );
 
   return (
+    <ProtectedRoute>
     <Box
       p={4}
       sx={{ overflowX: "hidden", maxWidth: "100vw", boxSizing: "border-box" }}
@@ -378,5 +380,6 @@ export default function Areas() {
         </DialogActions>
       </Dialog>
     </Box>
+    </ProtectedRoute>
   );
 }
