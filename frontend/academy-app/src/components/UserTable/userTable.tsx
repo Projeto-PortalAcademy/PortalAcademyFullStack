@@ -6,7 +6,7 @@ export type User = {
   id: number;
   name: string;
   email: string;
-  roles: string;
+  role: string;
 };
 
 // Props do componente UserTable
@@ -43,7 +43,7 @@ const UserTable: React.FC<UserTableProps> = ({
             <tr key={user.id} className="hover:bg-gray-50">
               <td className="border border-gray-200 px-4 py-2">{user.name}</td>
               <td className="border border-gray-200 px-4 py-2">{user.email}</td>
-              <td className="border border-gray-200 px-4 py-2">{user.roles}</td>
+              <td className="border border-gray-200 px-4 py-2">{user.role}</td>
               <td className="border border-gray-200 px-4 py-2 flex justify-center space-x-2">
                 {/* Botão para deletar */}
                 <button
@@ -59,7 +59,7 @@ const UserTable: React.FC<UserTableProps> = ({
                   onClick={() => onViewPage(user.id)}
                 >
                   <FaExternalLinkAlt size={16} className="mr-2" />
-                  Detalhes
+                  Página
                 </button>
               </td>
             </tr>
