@@ -4,7 +4,6 @@ import EvaluationHeader from "@/components/EvaluationHeader/EvaluationHeader";
 import FilterAndSearch from "@/components/FilterAndSearch/FilterAndSearch";
 import EvaluationCard from "@/components/EvaluationCard/EvaluationCard";
 import CreateEvaluationButton from "@/components/CreateEvaluationButton/CreateEvaluationButton";
-import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 
 interface EvaluationData {
   id: number;
@@ -30,7 +29,6 @@ export default function Home() {
   };
 
   return (
-    <ProtectedRoute>
     <div className="p-8">
       <div className="flex justify-center items-center mb-8">
         <h1 className="text-3xl font-bold">Avaliações</h1>
@@ -59,6 +57,5 @@ export default function Home() {
       {/* Botão de Criar Avaliação */}
       <CreateEvaluationButton onCreate={addEvaluation} />
     </div>
-    </ProtectedRoute>
   );
 }

@@ -7,7 +7,7 @@ import Sidebar from "../components/Sidebar/sidebar";
 import Header from "../components/Header/header";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-
+// Substitua pelo seu Client ID do Google
 const clientId = "26016779977-ncd6go4kfkbfeermarclvbvndp2glaqo.apps.googleusercontent.com";
 
 export default function RootLayout({

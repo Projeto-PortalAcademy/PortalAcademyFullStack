@@ -1,10 +1,8 @@
 import FilterAndSearch from "@/components/FilterAndSearch/FilterAndSearch";
 import PresenceChart from "@/components/PresenceChart/PresenceChart";
-import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 
 export default function Home() {
   return (
-    <ProtectedRoute>
     <div className="flex flex-col p-4">
       <div className="flex justify-center items-center">
         <h1 className="text-3xl font-bold">Dashboards</h1>
@@ -18,6 +16,5 @@ export default function Home() {
         <PresenceChart />
       </div>
     </div>
-    </ProtectedRoute>
   );
 }

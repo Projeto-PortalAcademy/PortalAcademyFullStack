@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import UserTable from "@/components/UserTable/userTable";
-import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 
 interface User {
   id: number;
@@ -75,7 +74,6 @@ const Usuarios: React.FC = () => {
   };
 
   return (
-    <ProtectedRoute>
     <div>
       <h1 className="text-xl font-bold mb-4">Usuários</h1>
       <UserTable
@@ -84,7 +82,6 @@ const Usuarios: React.FC = () => {
         onViewPage={handleViewPage}
       />
     </div>
-    </ProtectedRoute>
   );
 };
 
