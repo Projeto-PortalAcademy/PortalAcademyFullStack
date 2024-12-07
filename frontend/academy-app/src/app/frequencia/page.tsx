@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AttendanceTable from "@/components/PresenceTable/PresenceTable";
 import AddObservationModal from "@/components/AddObservationModal/AddObservationModal";
+import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 
 interface Student {
   id: number;
@@ -29,35 +30,69 @@ const Frequencia = () => {
     null
   );
 
-  const toggleStatus = (id: number) => {
+  const toggleStatus = (id: string) => {
     setStudents((prevStudents) =>
       prevStudents.map((student) =>
         student.id === id
-          ? {
-              ...student,
-              status:
-                student.status === "P"
-                  ? "F"
-                  : student.status === "F"
-                  ? "A"
-                  : "P",
-            }
+          ? { ...student, status: student.status === "P" ? "F" : "P" }
           : student
       )
     );
   };
 
-  const handleAddComment = (id: number) => {
-    setSelectedStudentId(id); // Armazena o ID do aluno selecionado
-    setIsAddObservationModalOpen(true); // Abre o modal
+  const handleAddComment = (id: string) => {
+    setSelectedStudentId(id);
+    setIsAddObservationModalOpen(true);
   };
 
   const handleCloseAddObservationModal = () => {
-    setIsAddObservationModalOpen(false); // Fecha o modal
-    setSelectedStudentId(null); // Reseta o ID do aluno selecionado
+    setIsAddObservationModalOpen(false);
+    setSelectedStudentId(null);
   };
 
+  const handleAddObservation = (observation: string) => {
+    if (selectedStudentId) {
+      setStudents((prevStudents) =>
+        prevStudents.map((student) =>
+          student.id === selectedStudentId ? { ...student, observation } : student
+        )
+      );
+    }
+    handleCloseAddObservationModal();
+  };
+
+  const handleSubmitAttendances = async () => {
+    setIsSubmitting(true);
+    const currentDate = new Date().toISOString();
+
+    for (const student of students) {
+      const sanitizedComment = typeof student.observation === "string" ? student.observation : "";
+
+      try {
+        await submitAttendance({
+          user_id: student.user_id,
+          date: currentDate,
+          is_present: student.status === "P",
+          comment: sanitizedComment,
+        });
+      } catch (error) {
+        console.error("Erro ao enviar presença:", error);
+      }
+    }
+
+    setIsSubmitting(false);
+  };
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  if (error) {
+    return <div>Erro ao carregar estudantes: {error.message}</div>;
+  }
+
   return (
+    <ProtectedRoute>
     <div>
       <h1 className="text-2xl font-bold">Frequência</h1>
       <AttendanceTable
@@ -70,6 +105,7 @@ const Frequencia = () => {
         onClose={handleCloseAddObservationModal}
       />
     </div>
+    </ProtectedRoute>
   );
 };
 
