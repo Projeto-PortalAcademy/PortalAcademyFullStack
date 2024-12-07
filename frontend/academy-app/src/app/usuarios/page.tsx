@@ -201,6 +201,7 @@ const Usuarios: React.FC = () => {
   }, []);
 
   return (
+    <ProtectedRoute>
     <div>
       <h1 className="text-xl font-bold mb-4">Usuários</h1>
       <button
@@ -228,6 +229,7 @@ const Usuarios: React.FC = () => {
         <UserDetailModal userId={selectedUserId} onClose={closeModal} />
       )}
     </div>
+    </ProtectedRoute>
   );
 };
 
