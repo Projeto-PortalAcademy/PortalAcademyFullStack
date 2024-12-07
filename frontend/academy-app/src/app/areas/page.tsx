@@ -37,6 +37,7 @@ type Group = {
   name: string;
   image: string;
   users: User[];
+  color: string;
 };
 
 export default function Areas() {
@@ -50,6 +51,10 @@ export default function Areas() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
+  const colors = [
+    "#FF5733", "#33FF57", "#3357FF", "#F39C12", "#9B59B6",
+    "#1ABC9C", "#E74C3C", "#34495E", "#2ECC71", "#3498DB"
+  ];
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -59,18 +64,20 @@ export default function Areas() {
           userService.getAllUsers(),
           groupService.getAllUserGroups(),
         ]);
-
+  
         if (!groupResponse || !userResponse || !userGroupResponse) {
           throw new Error("Invalid response from API");
         }
-
-        const groups = groupResponse.map((group: Group) => ({
+  
+        // Mapear os grupos e adicionar a cor correspondente
+        const groups = groupResponse.map((group: Group, index: number) => ({
           ...group,
           users: [],
+          color: colors[index % colors.length], // Atribui uma cor por índice
         }));
-
+  
         setUsers(userResponse);
-
+  
         userGroupResponse.forEach((userGroup: { group_id: string; user_id: string }) => {
           const group = groups.find((g) => g.id === userGroup.group_id);
           const user = userResponse.find((u: User) => u.id === userGroup.user_id);
@@ -78,17 +85,19 @@ export default function Areas() {
             group.users.push(user);
           }
         });
-
+  
         setAreas(groups);
       } catch (error) {
         console.error("Error fetching data:", error.message || error);
       }
     };
-
+  
     fetchAllData();
   }, []);
 
   const addArea = async () => {
+    const nextColor = colors[areas.length % colors.length];
+
     try {
       // Cria um novo grupo
       const newArea = {
@@ -96,6 +105,7 @@ export default function Areas() {
         name: newAreaName || "Nova área",
         image: "",
         users: addedUsers, // Adiciona os usuários ao Squad
+        color: nextColor,
       };
   
       // Adiciona o novo grupo à interface local
@@ -204,53 +214,11 @@ export default function Areas() {
 
               setFilteredUsers(matchingUsers); // Atualiza os usuários possíveis
             }}
-            sx={{ flexGrow: 1 }}
-          />
-        {searchQuery && (
-          <Box
             sx={{
-              position: "absolute",
-              backgroundColor: "white",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              marginTop: "4px",
-              width: "100%",
-              maxHeight: "200px",
-              overflowY: "auto",
-              zIndex: 10,
+              flexGrow: 1,
+              position: "relative",
             }}
-          >
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <Box
-                  key={user.id}
-                  sx={{
-                    padding: "8px",
-                    cursor: "pointer",
-                    "&:hover": { backgroundColor: "#f5f5f5" },
-                  }}
-                  onClick={() => {
-                    setSearchQuery(user.name); // Define o nome selecionado no campo
-                    setFilteredUsers([]); // Limpa as sugestões
-                  }}
-                >
-                  {user.name}
-                </Box>
-              ))
-            ) : (
-              <Typography
-                sx={{
-                  padding: "8px",
-                  color: "gray",
-                  textAlign: "center",
-                }}
-              >
-                Nenhum usuário encontrado
-              </Typography>
-            )}
-          </Box>
-        )}
-
+          />
 
         </Toolbar>
       </AppBar>
@@ -265,7 +233,7 @@ export default function Areas() {
             key={index}
             title={area.name}
             userCount={filteredUsersBySearch(area.users).length}
-            userIconColor="#B0B0B0"
+            userIconColor={area.color}
             users={filteredUsersBySearch(area.users)}
           />
         ))}
@@ -294,7 +262,7 @@ export default function Areas() {
         maxWidth="md"
       >
         <DialogTitle
-          sx={{ textAlign: "center", color: "black", marginBottom: "10px" }}
+          sx={{ textAlign: "center", color: "black"}}
         >
           Adicionar Squad
           <IconButton
@@ -312,10 +280,10 @@ export default function Areas() {
             fullWidth
             value={newAreaName}
             onChange={(e) => setNewAreaName(e.target.value)}
-            sx={{ mb: 2 }}
+            sx={{ mb: 2 , mt:2}}
           />
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Escolha usuários</InputLabel>
+          <FormControl fullWidth sx={{ mb: 2, mt:2 }}>
+            <InputLabel >Escolha usuários</InputLabel>
             <Select
               value={selectedUser}
               onChange={(e) => setSelectedUser(e.target.value)}
