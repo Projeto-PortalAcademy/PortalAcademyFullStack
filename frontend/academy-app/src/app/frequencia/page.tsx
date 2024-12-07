@@ -3,32 +3,31 @@
 import React, { useState, useEffect } from "react";
 import AttendanceTable from "@/components/PresenceTable/PresenceTable";
 import AddObservationModal from "@/components/AddObservationModal/AddObservationModal";
+import { fetchStudents, submitAttendance, Student } from "@/services/AttendanceService";
 import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 
-interface Student {
-  id: number;
-  name: string;
-  status: "P" | "F" | "A";
-}
+const Frequencia: React.FC = () => {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isAddObservationModalOpen, setIsAddObservationModalOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const Frequencia = () => {
-  const [students, setStudents] = useState<Student[]>([
-    { id: 1, name: "Camila Yukari Yatabe", status: "P" },
-    { id: 2, name: "Vinicius de Morais Lino", status: "F" },
-    { id: 3, name: "Vinicius Antunes", status: "A" },
-    { id: 4, name: "Thiago Tavares Silva", status: "P" },
-    { id: 5, name: "Guilherme Martins", status: "F" },
-    { id: 6, name: "Matheus Pajé da Mata", status: "A" },
-    { id: 7, name: "Thiago Tavares Silva", status: "P" },
-    { id: 8, name: "Felipe Camargo", status: "F" },
-    { id: 9, name: "Sérgio Nascimento", status: "A" },
-  ]);
+  useEffect(() => {
+    const loadStudents = async () => {
+      try {
+        const data = await fetchStudents();
+        setStudents(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("Failed to fetch students"));
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const [isAddObservationModalOpen, setIsAddObservationModalOpen] =
-    useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
-    null
-  );
+    loadStudents();
+  }, []);
 
   const toggleStatus = (id: string) => {
     setStudents((prevStudents) =>
@@ -93,18 +92,21 @@ const Frequencia = () => {
 
   return (
     <ProtectedRoute>
-    <div>
-      <h1 className="text-2xl font-bold">Frequência</h1>
-      <AttendanceTable
-        students={students}
-        onToggleStatus={toggleStatus}
-        onAddComment={handleAddComment}
-      />
-      <AddObservationModal
-        isOpen={isAddObservationModalOpen}
-        onClose={handleCloseAddObservationModal}
-      />
-    </div>
+      <div className="frequencia-screen">
+        <h1 className="text-2xl font-bold">Frequência</h1>
+        <AttendanceTable
+          students={students}
+          onToggleStatus={toggleStatus}
+          onAddComment={handleAddComment}
+          onSubmitAttendances={handleSubmitAttendances} // Passa a função para o AttendanceTable
+          isSubmitting={isSubmitting}
+        />
+        <AddObservationModal
+          isOpen={isAddObservationModalOpen}
+          onClose={handleCloseAddObservationModal}
+          onAddObservation={handleAddObservation}
+        />
+      </div>
     </ProtectedRoute>
   );
 };
