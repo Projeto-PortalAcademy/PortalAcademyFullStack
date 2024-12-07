@@ -5,13 +5,14 @@ const BASE_URL = "http://localhost:8080";
 export const endpoints = {
   LOGIN: "/auth/login",
   CREATE_USER: "/users",
-  USER: "/users",
   FORMS: "/forms",
+  USER: "/users",
+  GROUP: "/groups",
+  USER_GROUP: "/user_groups",
 };
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },

@@ -1,21 +1,27 @@
 import { Box, Typography } from "@mui/material";
 import UserIcon from "./userIcon";
 
+type User = {
+  id: string;
+  name: string;
+  photo?: string;
+};
+
 type AreaProps = {
   title: string;
-  userCount: number;
+  users: User[];
   userIconColor: string;
 };
 
-export default function Area({ title, userCount, userIconColor }: AreaProps) {
+export default function Area({ title, users, userIconColor }: AreaProps) {
   return (
-    <Box p={3} borderRadius={2}>
+    <Box p={3}>
       <Typography variant="h6" fontWeight="bold" mb={2}>
         {title}
       </Typography>
       <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2}>
-        {Array.from({ length: userCount }).map((_, index) => (
-          <UserIcon key={index} label="Estagiário(a)" color={userIconColor} />
+        {users.map((user) => (
+          <UserIcon key={user.id} label={user.name} color={userIconColor} photo={user.photo}/>
         ))}
       </Box>
     </Box>

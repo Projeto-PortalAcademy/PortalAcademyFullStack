@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import UserTable from "@/components/UserTable/userTable";
 import { listUsers, deleteUser, createUser, getUser } from "@/services/usersService";
+import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 
 interface User {
   id: number;
@@ -200,6 +201,7 @@ const Usuarios: React.FC = () => {
   }, []);
 
   return (
+    <ProtectedRoute>
     <div>
       <h1 className="text-xl font-bold mb-4">Usuários</h1>
       <button
@@ -227,6 +229,7 @@ const Usuarios: React.FC = () => {
         <UserDetailModal userId={selectedUserId} onClose={closeModal} />
       )}
     </div>
+    </ProtectedRoute>
   );
 };
 
