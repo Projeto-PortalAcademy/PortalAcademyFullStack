@@ -4,6 +4,7 @@ import { Box, Typography, Avatar } from "@mui/material";
 type User = {
   label: string;
   color: string;
+  photo?: string;
 };
 
 export default function UserIcon({ label, color }: User) {
@@ -18,7 +19,9 @@ export default function UserIcon({ label, color }: User) {
         width={96}
         height={96}
       >
-        <Avatar sx={{ bgcolor: "black", width: 48, height: 48 }} />
+        <Avatar 
+          src="{photo}"
+          sx={{ bgcolor: "black", width: 48, height: 48 }} />
       </Box>
       <Typography mt={2} fontSize="small" fontWeight="bold">
         {label}
