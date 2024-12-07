@@ -1,6 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import Image from "next/image";
 import bgLogin from "../../../public/images/bg-login.png";
 import { FaGithub } from "react-icons/fa";
@@ -8,16 +7,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { loginWithGoogle } from "../../services/login";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-
-  // Verifica se o usuário já está autenticado
-  useEffect(() => {
-    const userInfo = localStorage.getItem("user_info");
-    if (userInfo) {
-      router.push("/dashboard"); // Redireciona para o dashboard se autenticado
-    }
-  }, [router]);
 
   const handleGoogleLoginSuccess = async (credentialResponse: any) => {
     try {
@@ -27,9 +17,8 @@ export default function LoginPage() {
       const res = await loginWithGoogle({ token });
       console.log("Login bem-sucedido:", res.data);
 
-      // Armazena o token no localStorage e redireciona o usuário
+      // Exemplo: armazenar o token no localStorage ou redirecionar o usuário
       localStorage.setItem("user_info", JSON.stringify(res.data.user_info));
-      router.push("/dashboard");
     } catch (err: any) {
       console.error("Erro ao realizar login com Google:", err.response || err);
       setError("Erro ao realizar login com Google.");

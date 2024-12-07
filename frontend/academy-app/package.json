@@ -26,7 +26,6 @@
     "chart.js": "^3.9.1",
     "class-variance-authority": "^0.7.0",
     "framer-motion": "^11.11.17",
-    "js-cookie": "^3.0.5",
     "motion": "^11.11.17",
     "next": "14.2.12",
     "react": "^18",
@@ -39,7 +38,6 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
