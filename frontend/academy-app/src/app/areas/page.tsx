@@ -171,6 +171,7 @@ export default function Areas() {
     );
 
   return (
+    <ProtectedRoute>
     <Box
       p={4}
       sx={{ overflowX: "hidden", maxWidth: "100vw", boxSizing: "border-box" }}
@@ -379,5 +380,6 @@ export default function Areas() {
         </DialogActions>
       </Dialog>
     </Box>
+    </ProtectedRoute>
   );
 }
