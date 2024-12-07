@@ -1,95 +1,58 @@
 "use client";
-
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import bgLogin from "../../public/images/bg-login.png";
+import { useRouter } from "next/navigation";
+import bgLogin from "../../public/images/bg-login2.jpeg";
+import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-import { GoogleLogin } from "@react-oauth/google";
-import { parseJwt } from "../services/login"; // Importa parseJwt
-import Cookies from "js-cookie";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-
-  // Verifica se o usuário já está autenticado
-  useEffect(() => {
-    const userInfo = localStorage.getItem("user_info");
-    if (userInfo) {
-      router.push("/frequencia"); // Redireciona se autenticado
-    }
-  }, [router]);
-
-  const handleGoogleLoginSuccess = (credentialResponse: any) => {
-    try {
-      const token = credentialResponse.credential;
-  
-      // Decodifica o token para extrair informações do usuário
-      const userInfo = parseJwt(token);
-  
-      console.log("Usuário autenticado com Google:", userInfo);
-  
-      // Armazena o token no localStorage
-      localStorage.setItem("user_info", JSON.stringify(userInfo));
-  
-      // Armazena o token como um cookie para ser usado pelo middleware
-      Cookies.set("user_info", JSON.stringify(userInfo), { expires: 1 }); // Expira em 1 dia
-  
-      // Redireciona para o dashboard
-      router.push("/frequencia");
-    } catch (err) {
-      console.error("Erro ao realizar login com Google:", err);
-      setError("Erro ao realizar login com Google.");
-    }
-  };
-
-  const handleGoogleLoginFailure = (error: any) => {
-    console.error("Erro ao tentar autenticar com Google:", error);
-    setError("Falha no login com Google.");
-  };
 
   return (
-    <div className="relative flex w-full items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 h-screen">
-      {/* Background Section */}
-      <div className="absolute inset-0">
-        <Image src={bgLogin} alt="Background" quality={100} fill priority />
+    <div className="relative flex w-full h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-600">
+      {/* Background Image */}
+      <div className="absolute inset-0 opacity-50">
+        <Image
+          src={bgLogin}
+          alt="Background"
+          quality={100}
+          fill
+          priority
+          className="object-cover"
+        />
       </div>
 
-      {/* Login Form */}
-      <div className="m-6 relative z-10 flex w-2/6 items-center justify-center p-6 md:p-12 bg-white bg-opacity-85 shadow-lg rounded-3xl">
-        <div className="w-full">
+      {/* Sessão de login */}
+      <div className="relative z-10 flex w-6/12 items-center justify-center ml-auto bg-white shadow-lg p-6 md:p-12">
+        <div className="w-full max-w-md">
           <h2 className="text-3xl font-bold text-blue-900">Bem-vindo!</h2>
           <p className="mt-2 text-sm text-gray-600">
             Faça login para acessar sua conta
           </p>
-
-          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-
           <form className="mt-6">
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="text-sm font-medium text-gray-700"
             >
               E-mail
             </label>
             <input
               type="email"
               id="email"
-              className="mt-1 block w-full rounded-md bg-slate-100 bg-opacity-40 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 w-full rounded-md bg-slate-100 bg-opacity-40 shadow-sm focus:outline-none"
               placeholder="Digite seu e-mail"
             />
 
             <label
               htmlFor="password"
-              className="mt-4 block text-sm font-medium text-gray-700"
+              className="mt-4 text-sm font-medium text-gray-700"
             >
               Senha
             </label>
             <input
               type="password"
               id="password"
-              className="mt-1 block w-full rounded-md bg-slate-100 bg-opacity-40 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 w-full rounded-md bg-slate-100 bg-opacity-40 shadow-sm focus:outline-none"
               placeholder="Digite sua senha"
             />
 
@@ -113,20 +76,27 @@ export default function LoginPage() {
             <button
               type="submit"
               className="mt-6 w-full rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              onClick={(event) => {
+                event.preventDefault();
+                router.push("/avaliacao"); // Navega para a rota "/avaliacao"
+              }}
             >
               Entrar
             </button>
           </form>
 
           <div className="mt-6">
-            <GoogleLogin
-              onSuccess={handleGoogleLoginSuccess}
-              onError={handleGoogleLoginFailure}
-            />
+            <button
+              type="button"
+              className="mb-2 w-full flex items-center justify-center rounded-md border bg-white py-2 text-gray-600 hover:bg-gray-50"
+            >
+              <FcGoogle size={20} className="mr-2" />
+              Continuar com o Google
+            </button>
 
             <button
               type="button"
-              className="mt-4 w-full flex items-center justify-center rounded-md border bg-white py-2 text-gray-600 hover:bg-gray-50"
+              className="w-full flex items-center justify-center rounded-md border bg-white py-2 text-gray-600 hover:bg-gray-50"
             >
               <FaGithub size={20} className="mr-2" />
               Continuar com o GitHub
