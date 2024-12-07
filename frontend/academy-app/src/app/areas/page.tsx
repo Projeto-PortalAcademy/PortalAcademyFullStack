@@ -22,48 +22,153 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
+import { groupService } from "@/services/groupService";
+import userService from "@/services/userService";
 
-type User = string;
+type User = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+type Group = {
+  id: string;
+  name: string;
+  image: string;
+  users: User[];
+  color: string;
+};
 
 export default function Areas() {
-  const [areas, setAreas] = useState([
-    { title: "Ciência de dados", userCount: 3, userIconColor: "#6A9ACD" },
-    { title: "Engenharia de dados", userCount: 2, userIconColor: "#7BBF85" },
-    { title: "Front-end", userCount: 4, userIconColor: "#6CBED4" },
-    { title: "Machine Learning", userCount: 2, userIconColor: "#C188D4" },
-    { title: "DevOps", userCount: 2, userIconColor: "#D4A66A" },
-    { title: "Back-end", userCount: 3, userIconColor: "#D47878" },
-  ]);
-
+  const [areas, setAreas] = useState<Group[]>([]);
+  const [filteredArea, setFilteredArea] = useState("Todos");
   const [open, setOpen] = useState(false);
   const [newAreaName, setNewAreaName] = useState("");
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User>("");
+  const [selectedUser, setSelectedUser] = useState<string>("");
+  const [addedUsers, setAddedUsers] = useState<User[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
-  const addArea = () => {
-    const newArea = {
-      title: newAreaName || "Nova área",
-      userCount: users.length,
-      userIconColor: "#B0B0B0",
+  const colors = [
+    "#FF5733", "#33FF57", "#3357FF", "#F39C12", "#9B59B6",
+    "#1ABC9C", "#E74C3C", "#34495E", "#2ECC71", "#3498DB"
+  ];
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        const [groupResponse, userResponse, userGroupResponse] = await Promise.all([
+          groupService.getAllGroups(),
+          userService.getAllUsers(),
+          groupService.getAllUserGroups(),
+        ]);
+  
+        if (!groupResponse || !userResponse || !userGroupResponse) {
+          throw new Error("Invalid response from API");
+        }
+  
+        // Mapear os grupos e adicionar a cor correspondente
+        const groups = groupResponse.map((group: Group, index: number) => ({
+          ...group,
+          users: [],
+          color: colors[index % colors.length], // Atribui uma cor por índice
+        }));
+  
+        setUsers(userResponse);
+  
+        userGroupResponse.forEach((userGroup: { group_id: string; user_id: string }) => {
+          const group = groups.find((g) => g.id === userGroup.group_id);
+          const user = userResponse.find((u: User) => u.id === userGroup.user_id);
+          if (group && user) {
+            group.users.push(user);
+          }
+        });
+  
+        setAreas(groups);
+      } catch (error) {
+        console.error("Error fetching data:", error.message || error);
+      }
     };
-    setAreas([...areas, newArea]);
-    setOpen(false);
-    setNewAreaName("");
-    setUsers([]);
-  };
+  
+    fetchAllData();
+  }, []);
 
+  const addArea = async () => {
+    const nextColor = colors[areas.length % colors.length];
+
+    try {
+      // Cria um novo grupo
+      const newArea = {
+        id: Date.now().toString(),
+        name: newAreaName || "Nova área",
+        image: "",
+        users: addedUsers, // Adiciona os usuários ao Squad
+        color: nextColor,
+      };
+  
+      // Adiciona o novo grupo à interface local
+      setAreas([...areas, newArea]);
+  
+      // Registra o grupo no banco de dados
+      const createdGroup = await groupService.createGroup({
+        name: newArea.name,
+        image: newArea.image,
+      });
+      
+      const updatedGroups = await groupService.getAllGroups();
+
+      // Encontra o último grupo na lista
+      const lastGroup = updatedGroups[updatedGroups.length - 1]; // Último registro
+  
+      if (!lastGroup) {
+        throw new Error("Não foi possível encontrar o último grupo criado.");
+      }
+  
+      // Vincula os usuários ao último grupo criado
+      await Promise.all(
+        addedUsers.map((user) =>
+          groupService.addUserToGroup({
+            group_id: lastGroup.id, // Usa o ID do último grupo criado
+            user_id: user.id,
+          })
+        )
+      );
+  
+      // Fecha o modal e limpa os estados
+      setOpen(false);
+      setNewAreaName("");
+      setAddedUsers([]);
+    } catch (error) {
+      console.error("Erro ao adicionar grupo e vincular usuários:", error);
+    }
+  };
+  
   const handleAddUser = () => {
-    if (selectedUser && !users.includes(selectedUser)) {
-      setUsers([...users, selectedUser]);
+    if (selectedUser) {
+      const userToAdd = users.find((user) => user.id === selectedUser);
+      if (userToAdd && !addedUsers.some((u) => u.id === userToAdd.id)) {
+        setAddedUsers([...addedUsers, userToAdd]);
+      }
       setSelectedUser("");
     }
   };
 
   const handleRemoveUser = (user: User) => {
-    setUsers(users.filter((u) => u !== user));
+    setAddedUsers(addedUsers.filter((u) => u.id !== user.id)); // Remove o usuário da lista de adicionados
   };
+
+  const filteredAreas =
+  filteredArea === "Todos"
+    ? areas
+    : areas.filter((area) => area.name === filteredArea);
+
+  const filteredUsersBySearch = (users: User[]) =>
+    users.filter((user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   return (
     <ProtectedRoute>
@@ -82,23 +187,41 @@ export default function Areas() {
         <Toolbar>
           <FormControl variant="outlined" sx={{ mr: 2, minWidth: 120 }}>
             <InputLabel>Filtrar por:</InputLabel>
-            <Select label="Filtrar por">
+            <Select
+              value={filteredArea}
+              onChange={(e) => setFilteredArea(e.target.value)}
+              label="Filtrar por"
+            >
               <MenuItem value="Todos">Todos</MenuItem>
-              <MenuItem value="Ciência de dados">Ciência de dados</MenuItem>
-              <MenuItem value="Engenharia de dados">
-                Engenharia de dados
-              </MenuItem>
-              <MenuItem value="Front-end">Front-end</MenuItem>
-              <MenuItem value="Machine Learning">Machine Learning</MenuItem>
-              <MenuItem value="DevOps">DevOps</MenuItem>
-              <MenuItem value="Back-end">Back-end</MenuItem>
+              {areas.map((area, index) => (
+                <MenuItem key={index} value={area.name}>
+                  {area.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
+
           <TextField
             label="Pesquisar"
             variant="outlined"
-            sx={{ flexGrow: 1 }}
+            value={searchQuery}
+            onChange={(e) => {
+              const query = e.target.value;
+              setSearchQuery(query);
+
+              // Filtrar os usuários de acordo com o texto digitado
+              const matchingUsers = users.filter((user) =>
+                user.name.toLowerCase().includes(query.toLowerCase())
+              );
+
+              setFilteredUsers(matchingUsers); // Atualiza os usuários possíveis
+            }}
+            sx={{
+              flexGrow: 1,
+              position: "relative",
+            }}
           />
+
         </Toolbar>
       </AppBar>
       <Box
@@ -107,15 +230,17 @@ export default function Areas() {
         gap={4}
         sx={{ maxWidth: "100%", overflowX: "hidden", boxSizing: "border-box" }}
       >
-        {areas.map((area, index) => (
+        {filteredAreas.map((area, index) => (
           <Area
             key={index}
-            title={area.title}
-            userCount={area.userCount}
-            userIconColor={area.userIconColor}
+            title={area.name}
+            userCount={filteredUsersBySearch(area.users).length}
+            userIconColor={area.color}
+            users={filteredUsersBySearch(area.users)}
           />
         ))}
       </Box>
+
       <Tooltip title="Adicionar novo time" arrow>
         <Fab
           color="primary"
@@ -139,7 +264,7 @@ export default function Areas() {
         maxWidth="md"
       >
         <DialogTitle
-          sx={{ textAlign: "center", color: "black", marginBottom: "10px" }}
+          sx={{ textAlign: "center", color: "black"}}
         >
           Adicionar Squad
           <IconButton
@@ -151,46 +276,49 @@ export default function Areas() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
+        <DialogContent>
           <TextField
             label="Nome da área"
             fullWidth
             value={newAreaName}
             onChange={(e) => setNewAreaName(e.target.value)}
-            sx={{ mb: 2 }}
+            sx={{ mb: 2 , mt:2}}
           />
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Escolha usuários</InputLabel>
+          <FormControl fullWidth sx={{ mb: 2, mt:2 }}>
+            <InputLabel >Escolha usuários</InputLabel>
             <Select
               value={selectedUser}
               onChange={(e) => setSelectedUser(e.target.value)}
             >
-              <MenuItem value="Matheus Elis">Matheus Elis</MenuItem>
-              <MenuItem value="Ronaldo Moreira">Ronaldo Moreira</MenuItem>
-              <MenuItem value="Gustavo Silva">Gustavo Silva</MenuItem>
+              {users.map((user) => (
+                <MenuItem key={user.id} value={user.id}>
+                  {user.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
-          <Tooltip title="Adicionar usuário" arrow>
-            <Fab
-              color="primary"
-              onClick={handleAddUser}
-              sx={{
-                backgroundColor: "#4963bf",
-                color: "white",
-                mt: 2,
-                "&:hover": { backgroundColor: "#2b396b" },
-              }}
-            >
-              <AddIcon />
-            </Fab>
-          </Tooltip>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Tooltip title="Adicionar usuário" arrow placement="top">
+              <Fab
+                color="primary"
+                onClick={handleAddUser}
+                sx={{
+                  backgroundColor: "#4963bf",
+                  color: "white",
+                  display: "flex",
+                  "&:hover": { backgroundColor: "#2b396b" },
+                }}
+              >
+                <AddIcon />
+              </Fab>
+            </Tooltip>
+          </Box>
           <Box
             sx={{
               mt: 2,
@@ -203,51 +331,51 @@ export default function Areas() {
               overflow: "hidden",
             }}
           >
-            {users.map((user, index) => (
+            {addedUsers.map((user, index) => (
               <Box
                 key={index}
                 sx={{
                   display: "flex",
+                  flexDirection: "row",
                   alignItems: "center",
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: 1,
-                  padding: "4px 8px",
-                  maxWidth: "200px",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  gap: 1,
                 }}
               >
-                <Box
-                  sx={{
-                    flexGrow: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {user}
-                </Box>
-                <IconButton
-                  size="small"
-                  onClick={() => handleRemoveUser(user)}
-                  sx={{ ml: 1, flexShrink: 0 }}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
+                <Typography variant="body1">{user.name}</Typography>
+                <Tooltip title="Remover usuário" arrow placement="top">
+                  <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    sx={{
+                      cursor: "pointer",
+                      color: "black",
+                      "&:hover": { color: "darkred" },
+                    }}
+                    onClick={() => handleRemoveUser(user)}
+                  >
+                    x
+                  </Typography>
+                </Tooltip>
               </Box>
             ))}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "center" }}>
+        <DialogActions>
+          <Button onClick={addArea} color="primary">
+            Salvar
+          </Button>
           <Button
-            onClick={addArea}
+            onClick={() => setOpen(false)}
             sx={{
-              backgroundColor: "#4963bf",
-              "&:hover": { backgroundColor: "#2b396b" },
+              color: "black",
+              backgroundColor: "transparent",
+              "&:hover": {
+                backgroundColor: "transparent",
+                color: "gray",
+              },
             }}
-            variant="contained"
           >
-            ADICIONAR
+            Cancelar
           </Button>
         </DialogActions>
       </Dialog>
