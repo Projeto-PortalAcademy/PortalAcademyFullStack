@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   form_generator:
     container_name: form_generator
