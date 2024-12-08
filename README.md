@@ -28,7 +28,7 @@ Para configurar e iniciar o sistema, siga as instruções abaixo:
 
 2. **Baixe o projeto ou clone o repositório:**
    ```bash
-   git clone [<url-do-repositorio>](https://github.com/Projeto-PortalAcademy/PortalAcademyFullStack.git)
+   git clone https://github.com/Projeto-PortalAcademy/PortalAcademyFullStack.git
    cd ./PortalAcademyFullStack
    ```
 
